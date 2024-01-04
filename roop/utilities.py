@@ -93,9 +93,20 @@ def normalize_output_path(source_path: str, target_path: str, output_path: str) 
     return output_path
 
 
-def create_temp(target_path: str) -> None:
-    temp_directory_path = get_temp_directory_path(target_path)
-    Path('/kaggle/working/temp/target').mkdir(parents=True, exist_ok=True)
+def create_temp(target_path):
+    temp_directory_path = "/kaggle/working/temp"  # Set your desired absolute path here
+
+    # Print temporary directory path
+    print("Temporary Directory Path:", temp_directory_path)
+
+    # Attempt to create the directory and print success or failure
+    try:
+        Path(temp_directory_path).mkdir(parents=True, exist_ok=True)
+        print("Temporary Directory Created Successfully!")
+    except Exception as e:
+        print("Error creating temporary directory:", e)
+
+    # ... rest of the function
 
 
 
