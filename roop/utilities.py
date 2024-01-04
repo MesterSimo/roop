@@ -93,19 +93,9 @@ def normalize_output_path(source_path: str, target_path: str, output_path: str) 
     return output_path
 
 
-import tempfile
-from pathlib import Path
-
-def create_temp(target_path):
-    # Create a temporary directory and set it as the temporary directory path
-    temp_directory_path = tempfile.mkdtemp(dir="/kaggle/working")
-
-    # Print temporary directory path
-    print("Temporary Directory Path:", temp_directory_path)
-
-    # ... rest of the function
-
-
+def create_temp(target_path: str) -> None:
+    temp_directory_path = get_temp_directory_path(target_path)
+    Path(temp_directory_path).mkdir(parents=True, exist_ok=True)
 
 
 def move_temp(target_path: str, output_path: str) -> None:
