@@ -30,7 +30,7 @@ def parse_args() -> None:
     signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
     program = argparse.ArgumentParser(formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=100))
     program.add_argument('-s', '--source', help='select an source image', dest='source_path')
-    program.add_argument('-t', '--target', help='select an target image or video', dest='target_path')
+    program.add_argument('-t', '--target', help='select target images or video', dest='target_path', nargs='+')
     program.add_argument('-o', '--output', help='select output file or directory', dest='output_path')
     program.add_argument('--frame-processor', help='frame processors (choices: face_swapper, face_enhancer, ...)', dest='frame_processor', default=['face_swapper'], nargs='+')
     program.add_argument('--keep-fps', help='keep target fps', dest='keep_fps', action='store_true')
@@ -53,6 +53,9 @@ def parse_args() -> None:
 
     roop.globals.source_path = args.source_path
     roop.globals.target_path = args.target_path
+ # If only one target is provided, keep it as a string (for single image or video)
+ if len(roop.globals.target_path) == 1:
+    roop.globals.target_path = roop.globals.target_path[0]
     roop.globals.output_path = normalize_output_path(roop.globals.source_path, roop.globals.target_path, args.output_path)
     roop.globals.headless = roop.globals.source_path is not None and roop.globals.target_path is not None and roop.globals.output_path is not None
     roop.globals.frame_processors = args.frame_processor
@@ -129,6 +132,12 @@ def update_status(message: str, scope: str = 'ROOP.CORE') -> None:
 
 
 def start() -> None:
+    # Check if we're processing multiple images
+    if isinstance(roop.globals.target_path, list):
+        # Call the new batch image processing function
+        start_batch_image_processing(roop.globals.target_path)
+        return
+        
     for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
         if not frame_processor.pre_start():
             return
@@ -197,6 +206,21 @@ def start() -> None:
         update_status('Processing to video succeed!')
     else:
         update_status('Processing to video failed!')
+# New function to batch process multiple images
+def start_batch_image_processing(image_paths: List[str]) -> None:
+    for image_path in image_paths:
+        # Run prediction for each image
+        if predict_image(image_path):
+            destroy()
+        # Generate output path for the image
+        output_path = os.path.join(roop.globals.output_path, os.path.basename(image_path))
+        # Copy the image to the output directory
+        shutil.copy2(image_path, output_path)
+        # Process the image with the selected frame processors (face_swapper, etc.)
+        for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
+            update_status('Progressing...', frame_processor.NAME)
+            frame_processor.process_image(roop.globals.source_path, output_path, output_path)
+            frame_processor.post_process()
 
 
 def destroy() -> None:
