@@ -53,8 +53,9 @@ def parse_args() -> None:
 
     roop.globals.source_path = args.source_path
     roop.globals.target_path = args.target_path
- # If only one target is provided, keep it as a string (for single image or video)
- if len(roop.globals.target_path) == 1:
+
+# If only one target is provided, keep it as a string (for single image or video)
+if len(roop.globals.target_path) == 1:
     roop.globals.target_path = roop.globals.target_path[0]
     roop.globals.output_path = normalize_output_path(roop.globals.source_path, roop.globals.target_path, args.output_path)
     roop.globals.headless = roop.globals.source_path is not None and roop.globals.target_path is not None and roop.globals.output_path is not None
